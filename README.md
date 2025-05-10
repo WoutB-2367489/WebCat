@@ -101,6 +101,92 @@ For the y values for training, construct a Parquet file with one column, named `
 
 For the y values for testing, construct a Parquet file with one column, named `labels`, containing a _list_ of strings with the labels of the web page. This is to support multiple ground truth labels from different human annotators, and a distinction between unanimous and controversial websites is made during evaluation. Even if you have only one label per web page, this column must contain a list. The rows must be in the same order as the x values.
 
+### Mercator Batch JSON Preprocessing
+
+The project includes scripts to convert JSON files to Parquet format, merge multiple Parquet files, and label items for training.
+
+#### Converting JSON to Parquet
+
+To convert JSON files to Parquet format, use the `json_to_parquet.py` script:
+
+```bash
+python json_preprocessing/json_to_parquet.py <input_folder> <output_folder>
+```
+
+This script will process all JSON files in the input folder and create a separate Parquet file for each JSON file in the output folder. The Parquet files will contain only the HTML features from the JSON files.
+
+You can also use the provided shell script:
+
+```bash
+./convert_json_to_parquet.sh
+```
+
+This script will convert all JSON files in the `data/json/web` directory to Parquet files in the `data/parquet` directory.
+
+#### Merging Parquet Files
+
+To merge multiple Parquet files into a single file, use the `merge_parquet.py` script:
+
+```bash
+python json_preprocessing/merge_parquet.py <input_directory> <output_file>
+```
+
+This script will read all Parquet files in the input directory and merge them into a single Parquet file.
+
+You can also use the provided shell script:
+
+```bash
+./test_merge_parquet.sh
+```
+
+This script will merge all Parquet files in the `data/parquet` directory into a single file called `merged.parquet` in the `data/merged` directory.
+
+#### Labeling Items
+
+To manually label items for training, use the `label_items.py` script:
+
+```bash
+python labeller/label_items.py <html_features_path> <json_folder> <output_path> [--max-domains <max_domains>]
+```
+
+This script will load the HTML features from the specified Parquet file, find the corresponding JSON file for each visit_id, open the URL in a web browser, and prompt you to label each item as 0 or 1. The script will automatically skip domains that have already been labeled and apply the previous label to new items with the same domain/URL. The labels will be saved to the specified output path as a Parquet file.
+
+You can use the `--max-domains` parameter to limit the number of distinct domains to label. Once the specified number of domains has been labeled, the script will stop. This is useful for creating smaller labeled datasets or for stopping the labeling process after a certain number of domains have been labeled.
+
+The script uses Selenium WebDriver to reuse the same browser tab for all URLs, which makes the labeling process more efficient. You'll need to install Selenium and a compatible WebDriver (e.g., ChromeDriver) to use this feature:
+
+```bash
+pip install selenium
+```
+
+If Selenium is not available or encounters an error, the script will fall back to the default webbrowser module, which opens a new tab for each URL.
+
+You can also use the provided shell scripts:
+
+```bash
+./test_label_items_url.sh
+```
+
+This script will run the labeling process on the HTML features in the `data/parquet/html-features.parquet` file and save the labels to `data/labels/url_labels.parquet`.
+
+```bash
+./test_label_items_auto.sh
+```
+
+This script demonstrates the automatic labeling feature by running the labeling process on the HTML features in the `data/parquet/html-features.parquet` file and saving the labels to `data/labels/auto_labels.parquet`. It will automatically apply previous labels to new items with the same domain/URL.
+
+```bash
+./start_label_items.sh [max_domains]
+```
+
+This script is a convenient way to start the labeling process. It runs the `label_items.py` script with the paths to the HTML features parquet file, the JSON folder, and the output labels parquet file. You can optionally provide a number as an argument to limit the number of distinct domains to label. For example, `./start_label_items.sh 10` will stop the labeling process after 10 distinct domains have been labeled.
+
+```bash
+./test_label_items_max_domains.sh
+```
+
+This script demonstrates the `--max-domains` parameter by running the labeling process with a limit of 2 distinct domains. It will stop the labeling process after 2 distinct domains have been labeled and display information about the labeled domains.
+
 ## Preprocessing
 
 Before training or predicting, the dataset still needs to be preprocessed to obtain inputs that can directly be fed into the model.

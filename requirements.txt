@@ -13,3 +13,4 @@ seaborn==0.13.0
 h5py==3.10.0
 pyarrow==14.0.1
 python-dotenv==1.0.0
+selenium==4.15.2
