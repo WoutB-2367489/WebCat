@@ -62,7 +62,6 @@ def filter_labeled_data(html_features_path, labels_path, output_dir):
         os.makedirs(output_dir)
 
     # Remove visit_ids as the last step
-    filtered_html_features = filtered_html_features.drop(columns=['visit_id'])
     valid_labels = valid_labels.drop(columns=['visit_id'])
 
     # Save filtered dataframes to parquet files
