@@ -131,16 +131,6 @@ To merge multiple Parquet files into a single file, use the `merge_parquet.py` s
 python json_preprocessing/merge_parquet.py <input_directory> <output_file>
 ```
 
-This script will read all Parquet files in the input directory and merge them into a single Parquet file.
-
-You can also use the provided shell script:
-
-```bash
-./test_merge_parquet.sh
-```
-
-This script will merge all Parquet files in the `data/parquet` directory into a single file called `merged.parquet` in the `data/merged` directory.
-
 #### Labeling Items
 
 To manually label items for training, use the `label_items.py` script:
@@ -161,31 +151,6 @@ pip install selenium
 
 If Selenium is not available or encounters an error, the script will fall back to the default webbrowser module, which opens a new tab for each URL.
 
-You can also use the provided shell scripts:
-
-```bash
-./test_label_items_url.sh
-```
-
-This script will run the labeling process on the HTML features in the `data/parquet/html-features.parquet` file and save the labels to `data/labels/url_labels.parquet`.
-
-```bash
-./test_label_items_auto.sh
-```
-
-This script demonstrates the automatic labeling feature by running the labeling process on the HTML features in the `data/parquet/html-features.parquet` file and saving the labels to `data/labels/auto_labels.parquet`. It will automatically apply previous labels to new items with the same domain/URL.
-
-```bash
-./start_label_items.sh [max_domains]
-```
-
-This script is a convenient way to start the labeling process. It runs the `label_items.py` script with the paths to the HTML features parquet file, the JSON folder, and the output labels parquet file. You can optionally provide a number as an argument to limit the number of distinct domains to label. For example, `./start_label_items.sh 10` will stop the labeling process after 10 distinct domains have been labeled.
-
-```bash
-./test_label_items_max_domains.sh
-```
-
-This script demonstrates the `--max-domains` parameter by running the labeling process with a limit of 2 distinct domains. It will stop the labeling process after 2 distinct domains have been labeled and display information about the labeled domains.
 
 ## Preprocessing
 
