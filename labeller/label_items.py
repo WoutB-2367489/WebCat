@@ -68,6 +68,8 @@ def label_items(html_features_path, json_folder, output_path, max_domains=None):
         options = Options()
         options.add_argument("--start-maximized")  # Start with window maximized
         browser = webdriver.Chrome(options=options)
+        # Set page load timeout to 10 seconds
+        browser.set_page_load_timeout(10)
         print("Browser initialized successfully")
     except Exception as e:
         print(f"Error initializing browser: {e}")
@@ -131,38 +133,47 @@ def label_items(html_features_path, json_folder, output_path, max_domains=None):
                 else:
                     # Open the URL in the browser
                     print(f"Opening URL in browser...")
+                    skip_due_to_timeout = False
                     if browser:
                         try:
                             browser.get(url)
                             # Give the page some time to load
                             time.sleep(1)
                         except WebDriverException as e:
-                            print(f"Error opening URL in Selenium: {e}")
-                            print("Falling back to default webbrowser module")
-                            webbrowser.open(url)
+                            if "timeout" in str(e).lower():
+                                print(f"Timeout after 10s when loading URL: {url}")
+                                print("Automatically skipping this item (labeled as 's')")
+                                print("Skipping this item")
+                                skip_due_to_timeout = True
+                                # Note: We don't add to labels dictionary since 's' means skip
+                            else:
+                                print(f"Error opening URL in Selenium: {e}")
+                                print("Falling back to default webbrowser module")
+                                webbrowser.open(url)
                     else:
                         webbrowser.open(url)
 
-                    # Ask for label
-                    while True:
-                        label = input("Label this item (0 or 1, or 's' to skip): ")
-                        if label in ['0', '1']:
-                            label_value = int(label)
-                            labels[visit_id] = label_value
-                            # Store the label for this URL for future reference
-                            domain_labels[url] = label_value
+                    # Ask for label if not skipped due to timeout
+                    if not skip_due_to_timeout:
+                        while True:
+                            label = input("Label this item (0 or 1, or 's' to skip): ")
+                            if label in ['0', '1']:
+                                label_value = int(label)
+                                labels[visit_id] = label_value
+                                # Store the label for this URL for future reference
+                                domain_labels[url] = label_value
 
-                            # Check if we've reached the maximum number of domains
-                            if max_domains is not None and len(domain_labels) >= max_domains:
-                                print(f"\nReached the maximum number of distinct domains ({max_domains}). Stopping.")
-                                stop_labeling = True
+                                # Check if we've reached the maximum number of domains
+                                if max_domains is not None and len(domain_labels) >= max_domains:
+                                    print(f"\nReached the maximum number of distinct domains ({max_domains}). Stopping.")
+                                    stop_labeling = True
+                                    break
                                 break
-                            break
-                        elif label.lower() == 's':
-                            print("Skipping this item")
-                            break
-                        else:
-                            print("Invalid input. Please enter 0, 1, or 's'.")
+                            elif label.lower() == 's':
+                                print("Skipping this item")
+                                break
+                            else:
+                                print("Invalid input. Please enter 0, 1, or 's'.")
             else:
                 print(f"No URL found for visit_id {visit_id}")
         else:

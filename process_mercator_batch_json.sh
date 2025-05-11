@@ -6,7 +6,7 @@ parquet_folder=data/parquet
 features_parquet_file=data/html_features.parquet
 labels_parquet_file=data/labels.parquet
 filtered_foleder=data/filtered
-domains_labeled=3
+domains_labeled=20
 model_date=$(date '+%Y-%m-%d_%H-%M-%S')
 preprocessed_training_data=data/preprocessed/preprocessed_training_${model_date}.HDF5
 model_file=models/model_${model_date}.HDF5
@@ -18,18 +18,21 @@ mkdir -p data/preprocessed
 mkdir -p $parquet_folder
 mkdir -p $filtered_foleder
 
-#
+
 #echo "__________JSON TO PARQUET___________"
 #python json_preprocessing/json_to_parquet.py $input_folder "data/parquet/"
-#
-#echo "__________MERGE PARQUET___________"
-#python json_preprocessing/merge_parquet.py $parquet_folder $features_parquet_file
-#
-#echo "__________LABEL DOMAINS___________"
-#python labeller/label_items.py $features_parquet_file $input_folder $labels_parquet_file --max-domains $domains_labeled
-#
-#echo "__________FILTER UNLABELED RECORDS___________"
-#python json_preprocessing/filter_labeled_data.py --html-features $features_parquet_file --labels $labels_parquet_file --output-dir $filtered_foleder
+
+
+echo "__________MERGE PARQUET___________"
+python json_preprocessing/merge_parquet.py $parquet_folder $features_parquet_file
+
+
+echo "__________LABEL DOMAINS___________"
+python labeller/label_items.py $features_parquet_file $input_folder $labels_parquet_file --max-domains $domains_labeled
+
+
+echo "__________FILTER UNLABELED RECORDS___________"
+python json_preprocessing/filter_labeled_data.py --html-features $features_parquet_file --labels $labels_parquet_file --output-dir $filtered_foleder
 
 
 echo "__________PREPROCESS TRAINING DATA___________"
@@ -46,9 +49,5 @@ python preprocess.py predict ${features_parquet_file} ${model_file} ${preprocess
 
 echo "__________MAKE PREDICTIONS___________" # --entropies: Include prediction entropies in output (useful for active learning)
 python model.py predict --entropies ${preprocessed_prediction_data} ${model_file} ${predictions_file}
-
-#echo "Preprocessing, training, and prediction completed successfully."
-#echo "Model saved to: ${model_file}"
-#echo "Predictions saved to: ${predictions_file}"
 
 

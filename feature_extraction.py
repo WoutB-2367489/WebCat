@@ -8,6 +8,7 @@ from sklearn.impute import SimpleImputer
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import StandardScaler
 
+import config
 from config import NB_LINKS_SVD_COMPONENTS, NUMERIC_FEATURES
 
 
@@ -19,6 +20,12 @@ def column_transformer(orig: pd.DataFrame) -> tuple[ColumnTransformer, npt.NDArr
     :param orig: DataFrame with website samples
     :return: (fitted ColumnTransformer, numpy array with extracted features)
     """
+
+    print(config.NB_LINKS_SVD_COMPONENTS)
+    print(config.NUMERIC_FEATURES)
+    print(config.NB_NUMERIC_FEATURES)
+    print(config.NB_EXTRA_FEATURES)
+
     tfs = [("num", Pipeline(
         [("num_imput", SimpleImputer(missing_values=np.nan, strategy="median")), ("num_scale", StandardScaler())]),
             NUMERIC_FEATURES)]

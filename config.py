@@ -2,7 +2,7 @@ import torch
 
 PRETRAINED_MODEL = "xlm-roberta-base"
 DEVICE = torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu")
-PREDICTION_BATCH_SIZE = 96  # can be lowered if video memory consumption is too high during inference
+PREDICTION_BATCH_SIZE = 64  # can be lowered if video memory consumption is too high during inference
 
 ENVIRONMENT_PATH = ".env"
 
@@ -18,8 +18,8 @@ NUMERIC_FEATURES = [
     "nb_youtube_deep_links", "nb_youtube_shallow_links", "nb_vimeo_deep_links",
     "nb_vimeo_shallow_links", "fraction_words_title_initial_dn",
     "fraction_words_title_final_dn", "nb_distinct_words_in_title", "distance_title_initial_dn",
-    "longest_subsequence_title_initial_dn"
+    "longest_subsequence_title_initial_dn", "nb_words"
 ]
 NB_NUMERIC_FEATURES = len(NUMERIC_FEATURES)
-NB_LINKS_SVD_COMPONENTS = 70
+NB_LINKS_SVD_COMPONENTS = 13
 NB_EXTRA_FEATURES = NB_LINKS_SVD_COMPONENTS + NB_NUMERIC_FEATURES

@@ -61,7 +61,24 @@ class PreprocessedInputs(Dataset):
         return None if y not in self.h5f else self.h5f[y]
 
     def visit_ids(self) -> h5py.Dataset:
-        return self.h5f[os.path.join(self._directory, "visit_ids")].asstr()
+        try:
+            # Try using asstr() first
+            return self.h5f[os.path.join(self._directory, "visit_ids")].asstr()
+        except TypeError:
+            # Fall back to manual decoding if asstr() fails
+            visit_ids_dataset = self.h5f[os.path.join(self._directory, "visit_ids")]
+            # Return a proxy object that behaves like a dataset but decodes strings
+            class DecodedDataset:
+                def __init__(self, dataset):
+                    self.dataset = dataset
+
+                def __getitem__(self, item):
+                    data = self.dataset[item]
+                    if isinstance(data, np.ndarray):
+                        return np.array([s.decode('utf-8') if isinstance(s, bytes) else s for s in data])
+                    return data.decode('utf-8') if isinstance(data, bytes) else data
+
+            return DecodedDataset(visit_ids_dataset)
 
     def visit_ids_raw(self) -> h5py.Dataset:
         return self.h5f[os.path.join(self._directory, "visit_ids")]
@@ -167,7 +184,9 @@ class PreprocessedTrainingData:
 
     def label_encoder(self) -> LabelEncoder:
         label_enc = LabelEncoder()
-        label_enc.classes_ = self.h5f["label_encoder"].asstr()[()]
+        # Handle byte strings by decoding them to Python strings
+        byte_classes = self.h5f["label_encoder"][()]
+        label_enc.classes_ = np.array([s.decode('utf-8') for s in byte_classes])
         return label_enc
 
     @staticmethod
@@ -194,9 +213,11 @@ def _add_col_transformer_to_file(h5f: h5py.File, col_transformer: ColumnTransfor
 
 
 def _add_label_encoder_to_file(h5f: h5py.File, label_enc: LabelEncoder, directory: str):
+    # Convert classes to a list of strings
+    classes_list = [str(c) for c in label_enc.classes_]
     h5f.create_dataset(
         os.path.join(directory, "label_encoder"),
-        data=label_enc.classes_
+        data=np.array(classes_list, dtype='S')
     )
 
 
@@ -262,11 +283,18 @@ def preprocess_training_data(x: pd.DataFrame, y: pd.DataFrame, validation_size: 
     :param path_out: Output path of HDF5 file with preprocessed training data.
                      Can later be loaded using PreprocessedTrainingData.
     """
-    tokenizer = AutoTokenizer.from_pretrained(PRETRAINED_MODEL, use_fast=True)
+    tokenizer = AutoTokenizer.from_pretrained(PRETRAINED_MODEL, use_fast=True, force_download=False)
 
     x = preprocess_basic(x)
 
     col_transformer, transformed_features = column_transformer(x)
+
+    # # Ensure transformed_features has the correct shape
+    # current_features = transformed_features.shape[1]
+    # if current_features < NB_EXTRA_FEATURES:
+    #     padding_size = NB_EXTRA_FEATURES - current_features
+    #     padding = np.zeros((transformed_features.shape[0], padding_size))
+    #     transformed_features = np.hstack((transformed_features, padding))
 
     label_enc = LabelEncoder()
     enc_y = label_enc.fit_transform(y["label"])
@@ -304,7 +332,10 @@ def preprocess_x(pqf: pq.ParquetFile, col_transformer: ColumnTransformer, path_o
     :param path_out: Output path of HDF5 file with preprocessed input data.
                      Can later be loaded using PreprocessedInputs.
     """
-    tokenizer = AutoTokenizer.from_pretrained(PRETRAINED_MODEL, use_fast=True)
+    tokenizer = AutoTokenizer.from_pretrained(PRETRAINED_MODEL, use_fast=True, force_download=False)
+
+    # Print the expected number of features
+    print(f"Expected number of features (NB_EXTRA_FEATURES): {NB_EXTRA_FEATURES}")
 
     with PreprocessedInputs.create_new(path_out, pqf.metadata.num_rows, False) as preprocessed:
         for batch in pqf.iter_batches(batch_size=1000):

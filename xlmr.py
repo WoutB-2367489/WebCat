@@ -121,11 +121,10 @@ def create_bert(label_amount: int, move: bool = True) -> CustomXlmRoberta:
     """
     saved_verbosity = logging.get_verbosity()
     logging.set_verbosity_error()
-    model = CustomXlmRoberta.from_pretrained(PRETRAINED_MODEL, num_labels=label_amount, num_extra_dims=NB_EXTRA_FEATURES)
+    model = CustomXlmRoberta.from_pretrained(PRETRAINED_MODEL, num_labels=label_amount, num_extra_dims=NB_EXTRA_FEATURES, force_download=False)
     logging.set_verbosity(saved_verbosity)
 
     if move:
         model = model.to(DEVICE)
 
     return model
-
