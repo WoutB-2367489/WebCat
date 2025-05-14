@@ -1,6 +1,5 @@
 *.parquet
-*.hdf5
-*.model
+*.HDF5
 .idea/
 __pycache__/
 venv/
@@ -10,3 +9,4 @@ venv/
 /.junie/
 /data_cc/
 /data_cn/
+/models/

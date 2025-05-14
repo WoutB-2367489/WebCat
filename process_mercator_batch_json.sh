@@ -17,13 +17,13 @@ mkdir -p models
 mkdir -p data/preprocessed
 mkdir -p $parquet_folder
 mkdir -p $filtered_foleder
-#
-#
+
+
 #echo "__________JSON TO PARQUET___________"
 #python json_preprocessing/json_to_parquet.py $input_folder "data/parquet/"
 
 
-#
+
 #echo "__________MERGE PARQUET___________"
 #python json_preprocessing/merge_parquet.py $parquet_folder $features_parquet_file
 
