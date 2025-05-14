@@ -6,7 +6,7 @@ parquet_folder=data/parquet
 features_parquet_file=data/html_features.parquet
 labels_parquet_file=data/labels.parquet
 filtered_foleder=data/filtered
-domains_labeled=20
+domains_labeled=20 # 20 domains won't do. Just as poc.
 model_date=$(date '+%Y-%m-%d_%H-%M-%S')
 preprocessed_training_data=data/preprocessed/preprocessed_training_${model_date}.HDF5
 model_file=models/model_${model_date}.HDF5
@@ -17,18 +17,19 @@ mkdir -p models
 mkdir -p data/preprocessed
 mkdir -p $parquet_folder
 mkdir -p $filtered_foleder
-
-
+#
+#
 #echo "__________JSON TO PARQUET___________"
 #python json_preprocessing/json_to_parquet.py $input_folder "data/parquet/"
 
 
-echo "__________MERGE PARQUET___________"
-python json_preprocessing/merge_parquet.py $parquet_folder $features_parquet_file
+#
+#echo "__________MERGE PARQUET___________"
+#python json_preprocessing/merge_parquet.py $parquet_folder $features_parquet_file
 
 
-echo "__________LABEL DOMAINS___________"
-python labeller/label_items.py $features_parquet_file $input_folder $labels_parquet_file --max-domains $domains_labeled
+#echo "__________LABEL DOMAINS___________"
+#python labeller/label_items.py $features_parquet_file $input_folder $labels_parquet_file --max-domains $domains_labeled
 
 
 echo "__________FILTER UNLABELED RECORDS___________"
@@ -40,7 +41,7 @@ python preprocess.py train --split 0.15 ${filtered_foleder}/filtered-html-featur
 
 
 echo "__________TRAIN MODEL___________"
-python model.py train --batch-size 2 --epochs 1 --learning-rate 2e-5 --seed "random" ${preprocessed_training_data} ${model_file}
+python model.py train --batch-size 8 --epochs 4 --learning-rate 2e-5 --seed "random" ${preprocessed_training_data} ${model_file}
 
 
 echo "__________PREPROCESS FOR PREDICTION___________"
