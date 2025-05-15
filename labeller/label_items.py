@@ -99,7 +99,6 @@ def label_items(html_features_path, json_folder, output_path, max_domains=None):
             print(f"Error loading previous labels: {e}")
             print("Starting with empty labels")
 
-    # Process each row
     stop_labeling = False
     for i, row in df.iterrows():
         if stop_labeling:
@@ -112,7 +111,6 @@ def label_items(html_features_path, json_folder, output_path, max_domains=None):
         print(f"visit_id: {visit_id}")
         print(f"domain_name: {domain_name}")
 
-        # Find the JSON file for this visit_id
         json_file, item = find_json_file_for_visit_id(visit_id, json_folder)
 
         if json_file and item:
@@ -131,13 +129,11 @@ def label_items(html_features_path, json_folder, output_path, max_domains=None):
                     labels[visit_id] = previous_label
                     print(f"URL already labeled as {previous_label}. Automatically applying this label.")
                 else:
-                    # Open the URL in the browser
                     print(f"Opening URL in browser...")
                     skip_due_to_timeout = False
                     if browser:
                         try:
                             browser.get(url)
-                            # Give the page some time to load
                             time.sleep(1)
                         except WebDriverException as e:
                             if "timeout" in str(e).lower():
@@ -145,7 +141,6 @@ def label_items(html_features_path, json_folder, output_path, max_domains=None):
                                 print("Automatically skipping this item (labeled as 's')")
                                 print("Skipping this item")
                                 skip_due_to_timeout = True
-                                # Note: We don't add to labels dictionary since 's' means skip
                             else:
                                 print(f"Error opening URL in Selenium: {e}")
                                 print("Falling back to default webbrowser module")
@@ -153,7 +148,6 @@ def label_items(html_features_path, json_folder, output_path, max_domains=None):
                     else:
                         webbrowser.open(url)
 
-                    # Ask for label if not skipped due to timeout
                     if not skip_due_to_timeout:
                         while True:
                             label = input("Label this item (0 or 1, or 's' to skip): ")
@@ -185,21 +179,15 @@ def label_items(html_features_path, json_folder, output_path, max_domains=None):
         'label': list(labels.values())
     })
 
-    # Ensure the labels DataFrame has the same order as the html-features DataFrame
     if len(labels_df) > 0:
-        # Create a mapping from visit_id to label
         label_map = dict(zip(labels_df['visit_id'], labels_df['label']))
 
-        # Create a new DataFrame with all visit_ids from the html-features DataFrame
         all_labels_df = pd.DataFrame({'visit_id': df['visit_id']})
 
-        # Add the label column, using the label_map
         all_labels_df['label'] = all_labels_df['visit_id'].map(label_map)
 
-        # Fill NaN values with -1 (indicating unlabeled)
         all_labels_df['label'] = all_labels_df['label'].fillna(-1).astype(int)
 
-        # Save the labels to a Parquet file
         all_labels_df.to_parquet(output_path, index=False)
 
         print(f"\nLabeling completed. Labeled {len(labels)} items.")
@@ -210,7 +198,6 @@ def label_items(html_features_path, json_folder, output_path, max_domains=None):
     else:
         print("\nNo items were labeled.")
 
-    # Close the browser if it was initialized
     if browser:
         try:
             print("Closing browser...")

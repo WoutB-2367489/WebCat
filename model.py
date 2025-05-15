@@ -277,7 +277,7 @@ def make_predictions(inputs: PreprocessedInputs, model: CustomXlmRoberta, label_
     :param output_path: Path to store predictions in (as Parquet file) - if None, predictions are returned as DataFrame
     :param progress_bar: Should a progress bar be displayed during inference time
     """
-    pqwriter = None
+    all_predictions = None
     out_df = None
 
     model.eval()
@@ -373,21 +373,20 @@ def make_predictions(inputs: PreprocessedInputs, model: CustomXlmRoberta, label_
             df = pd.DataFrame(df_dict)
 
             if output_path is not None:
-                # noinspection PyArgumentList
-                table = pa.Table.from_pandas(df)
+                print(df.shape)
+                if all_predictions is None:
+                    all_predictions = df
+                else:
+                    all_predictions = pd.concat((all_predictions, df), ignore_index=True)
 
-                if pqwriter is None:
-                    pqwriter = pq.ParquetWriter(output_path, table.schema)
-
-                pqwriter.write_table(table)
             else:
                 if out_df is None:
                     out_df = df
                 else:
                     out_df = pd.concat((out_df, df), ignore_index=True)
 
-    if pqwriter:
-        pqwriter.close()
+    if all_predictions is not None:
+        all_predictions.to_parquet(output_path)
 
     if output_path is None:
         return out_df
